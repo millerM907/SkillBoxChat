@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">SkillBox Chat</string>
+    <string name="time">11:51:01 28.04.2020</string>
+    <string name="userName">Миша</string>
+    <string name="numberUsers">Пользователей онлайн: %d</string>
+    <string name="enterYouMessageString">Введите ваше сообщение</string>
+    <string name="sendString">Отправить</string>
+</resources>
