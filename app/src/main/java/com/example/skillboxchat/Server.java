@@ -45,9 +45,8 @@ public class Server {
 
         client = new WebSocketClient(address) {
             @Override
-            public void onOpen(ServerHandshake handshakedata) {
+            public void onOpen(ServerHandshake handshakeData) {
                 Log.i("SERVER", "Connected to server");
-                sendName("Mike");
             }
 
             @Override
@@ -82,21 +81,19 @@ public class Server {
         client.connect();
     }
 
-    public void sendName(String name){
-        Protocol.UserName userName = new Protocol.UserName(name);
-
-        if(client != null && client.isOpen()){
-            client.send(Protocol.packName(userName));
-
-        }
-    }
-
     public void sendMessage(String text){
-        Protocol.Message mess = new Protocol.Message(text);
-
-        if(client != null && client.isOpen()){
-            client.send(Protocol.packMessage(mess));
+        if(client == null || !client.isOpen()) {
+            return;
         }
+
+        try {
+            text = Crypto.encrypt(text);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Protocol.Message mess = new Protocol.Message(text);
+        String packedMessage = Protocol.packMessage(mess);
+        client.send(packedMessage);
     }
 
     private void updateStatus(Protocol.UserStatus status){
@@ -115,9 +112,14 @@ public class Server {
         if(name == null){
             name = "Unnamed";
         }
-
+        String text = message.getEncodedText();
+        try {
+            text = Crypto.decrypt(text);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         //отправляем в MainActivity пришедшее сообщение
-        onMessageReceived.accept(new Pair<>(name, message.getEncodedText()));
+        onMessageReceived.accept(new Pair<>(name, text));
     }
 
     //метод отправляет в MainActivity количество активных пользователей
@@ -134,6 +136,11 @@ public class Server {
         if(connected){
             newUserReceived.accept(name);
         }
+    }
+
+    public void sendUserName(String name) {
+        String myName = Protocol.packName(new Protocol.UserName(name));
+        client.send(myName);
     }
 }
 

@@ -1,9 +1,11 @@
 package com.example.skillboxchat;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.util.Consumer;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Pair;
 import android.view.View;
@@ -20,9 +22,26 @@ public class MainActivity extends AppCompatActivity {
     private Button sendMessage;
     private EditText inputMessage;
     private MessageController controller;
+    private String userName;
+    private Server server;
 
     //TextView, выводящее количество пользователей
     private TextView numberUsers;
+
+    public void getUserName() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Enter your name");
+        final EditText nameInput = new EditText(this);
+        builder.setView(nameInput);
+        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                userName = nameInput.getText().toString();
+                server.sendUserName(userName);
+            }
+        });
+        builder.show();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
                 .appendTo(chatWindow, this);
 
 
-        final Server server = new Server(new Consumer<Pair<String, String>>() {
+        server = new Server(new Consumer<Pair<String, String>>() {
             @Override
             public void accept(final Pair<String, String> pair) {
                 runOnUiThread(new Runnable() {
@@ -84,8 +103,9 @@ public class MainActivity extends AppCompatActivity {
                     });
                 }
         });
-        server.connect();
 
+        server.connect();
+        getUserName();
 
         sendMessage.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -95,12 +115,14 @@ public class MainActivity extends AppCompatActivity {
                 controller.addMessage(
                         new MessageController.Message(
                                 messageText,
-                                "Mike",
+                                userName,
                                 true)
                 );
                 inputMessage.setText("");
                 server.sendMessage(messageText);
             }
         });
+
+
     }
 }
